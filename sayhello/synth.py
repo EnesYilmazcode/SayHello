@@ -48,10 +48,16 @@ def render(frames):
     n = min(sum(frame_samples(f) for f in frames), SR * MAX_SECONDS)
     f0, voice, noise = (track(frames, k, n) for k in ("f0", "voice", "noise"))
 
-    # glottal source: a smooth pulse per period, differentiated for brightness
-    phase = np.cumsum(np.clip(f0, 0, 600) / SR) % 1.0
-    pulse = np.where(phase < 0.6, np.sin(np.pi * phase / 0.6) ** 2, 0.0)
-    pulse = np.diff(pulse, prepend=0) * 10
+    # glottal source: one impulse per pitch period, softened to a -6 dB per octave tilt.
+    # A smooth pulse here left F2 30 dB down and every vowel sounded like "oo".
+    periods = np.floor(np.cumsum(np.clip(f0, 0, 600) / SR))
+    impulses = np.diff(periods, prepend=0) > 0
+    pulse = np.zeros(n)
+    acc = 0.0
+    for i in range(n):
+        acc = 0.9 * acc + impulses[i]
+        pulse[i] = acc
+    pulse -= np.convolve(pulse, np.ones(64) / 64, mode="same")  # drop the DC offset
     source = pulse * np.clip(voice, 0, 1) * (f0 > 20)
     rng = np.random.default_rng(0)
     source = source + rng.standard_normal(n) * 0.15 * np.clip(noise, 0, 1)
