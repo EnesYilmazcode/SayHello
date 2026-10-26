@@ -2,11 +2,13 @@
 
 usage: python video/render.py [word] [out.mp4] [fps]
 
-The best model plays first on a big card, which then shrinks into a grid of all ten. The rest play
-one by one, smallest model to largest. The first frame is the finished grid, which dissolves into
-the opening, because X uses the first frame as the thumbnail.
+All ten cards sit in one grid the whole time. The best model plays first, then the rest in a fixed
+shuffled order, so hits and misses are mixed. Each card types out what Whisper heard while its
+clip plays, and a stamp comes down on the bars when it ends. The first frame is the finished grid,
+which dissolves into the start, because X uses the first frame as the thumbnail.
 """
 import json
+import random
 import subprocess
 import sys
 from pathlib import Path
@@ -23,25 +25,17 @@ from sound import mix, write_wav
 
 W, H, S = 1800, 1200, 2
 COLS, CARD_W, CARD_H, GAP = 5, 312, 505, 30
-BIG_H = 1000
 MAX_PLAY = 1.6                    # seconds of a clip that play; longer ones fade out
 LEAD_HOLD, LEAD_FADE, END_HOLD = 0.85, 0.45, 1.5
-HIGHLIGHT, LIFT = 0.18, 1.08      # seconds to lift a card as its turn starts, and how much
-GAPS = (0.3, 0.1)                 # pause after each verdict, first to last
+FIRST = 0.4                       # seconds of the empty grid before the first voice
+STAMP = 0.08                      # seconds from the end of a clip to its stamp
+GAPS = (0.45, 0.2)                # pause after each stamp, first to last
+SEED = 9                          # fixes the shuffle; no more than two hits or misses in a row
 
 
 def ease(t):
     t = float(np.clip(t, 0, 1))
     return t * t * (3 - 2 * t)
-
-
-def lerp_box(a, b, t):
-    return tuple(x + (y - x) * t for x, y in zip(a, b))
-
-
-def scale_box(box, k):
-    x, y, w, h = box
-    return (x + w * (1 - k) / 2, y + h * (1 - k) / 2, w * k, h * k)
 
 
 def slot(i):
@@ -51,6 +45,7 @@ def slot(i):
 
 
 def load(word):
+    """Cards in play order, which is also grid order: the featured model, then the rest shuffled."""
     out = ROOT / "results" / word
     board = json.loads((out / "scoreboard.json").read_text(encoding="utf8"))
     cards = []
@@ -58,55 +53,31 @@ def load(word):
         audio = synth.load_wav(out / f"{m['clip']}.wav")
         play = min(len(audio) / synth.SR, MAX_PLAY)
         cards.append({"model": m["model"], "audio": audio, "play": play, "hit": m["hits"] > 0,
-                      "levels": bars(audio[:int(play * synth.SR)])})
-    featured = next(i for i, c in enumerate(cards) if c["model"] == board["featured"])
-    return cards, featured
+                      "heard": m["heard"], "levels": bars(audio[:int(play * synth.SR)])})
+    featured = [c for c in cards if c["model"] == board["featured"]]
+    rest = [c for c in cards if c["model"] != board["featured"]]
+    random.Random(SEED).shuffle(rest)
+    return featured + rest
 
 
-def timeline(cards, featured):
-    """When each card's voice starts and when its mark lands, in story seconds."""
-    big_w = BIG_H * CARD_W / CARD_H
-    big = ((W - big_w) / 2, (H - BIG_H) / 2, big_w, BIG_H)
-    f = cards[featured]
-    f["start"] = 0.35
-    f["mark"] = f["start"] + f["play"] + 0.12
-    morph = (f["mark"] + 0.7, f["mark"] + 1.3)
-    t = morph[1] + 0.3
-    others = [i for i in range(len(cards)) if i != featured]
-    for k, i in enumerate(others):
-        c = cards[i]
-        c["lift"] = t
-        c["start"] = t + HIGHLIGHT
-        c["mark"] = c["start"] + c["play"] + 0.08
-        t = c["mark"] + 0.25 + GAPS[0] + (GAPS[1] - GAPS[0]) * k / max(1, len(others) - 1)
-    return big, morph, t + END_HOLD
+def timeline(cards):
+    """When each card's voice starts and when its stamp lands, in story seconds."""
+    t = FIRST
+    for k, c in enumerate(cards):
+        c["start"] = t
+        c["mark"] = t + c["play"] + STAMP
+        t = c["mark"] + 0.3 + GAPS[0] + (GAPS[1] - GAPS[0]) * k / max(1, len(cards) - 1)
+    return t + END_HOLD
 
 
-def state(t, cards, featured, big, morph):
-    """Box, progress and mark for every card at story time t. The lifted card is drawn last."""
-    drawn = []
-    grow = ease((t - morph[0]) / (morph[1] - morph[0]))
-    for i, c in enumerate(cards):
-        played = np.clip((t - c["start"]) / c["play"], 0, 1)
-        mark = np.clip((t - c["mark"]) / 0.35, 0, 1)
-        if i == featured:
-            box, fade, lift = lerp_box(big, slot(i), grow), 1.0, 0
-        else:
-            box, fade = slot(i), grow
-            lift = ease((t - c["lift"]) / HIGHLIGHT) - ease((t - c["mark"] - 0.15) / 0.2)
-            box = scale_box(box, 1 + (LIFT - 1) * lift)
-        drawn.append((lift, i, box, played, mark, fade))
-    return sorted(drawn, key=lambda d: (d[0] > 0, d[1]))
-
-
-def frame(t, cards, featured, big, morph):
+def frame(t, cards):
     canvas = Image.new("RGBA", (W * S, H * S), BG)
-    for _, i, box, played, mark, fade in state(t, cards, featured, big, morph):
-        if fade <= 0:
-            continue
-        c = cards[i]
-        draw_card(canvas, tuple(v * S for v in box), c["model"], c["levels"], played,
-                  c["hit"] if mark > 0 else None, mark, fade)
+    for i, c in enumerate(cards):
+        played = float(np.clip((t - c["start"]) / c["play"], 0, 1))
+        mark = float(np.clip((t - c["mark"]) / 0.35, 0, 1))
+        active = ease((t - c["start"] + 0.15) / 0.15) - ease((t - c["mark"] - 0.2) / 0.3)
+        draw_card(canvas, tuple(v * S for v in slot(i)), c["model"], c["levels"], played,
+                  c["hit"] if mark > 0 else None, mark, c["heard"], active)
     return canvas.convert("RGB").resize((W, H), Image.LANCZOS)
 
 
@@ -116,10 +87,11 @@ def main():
     fps = int(sys.argv[3]) if len(sys.argv) > 3 else 60
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    cards, featured = load(word)
-    big, morph, story = timeline(cards, featured)
+    cards = load(word)
+    story = timeline(cards)
     lead = LEAD_HOLD + LEAD_FADE
     total = lead + story
+    print("order:", ", ".join(f"{c['model']} ({'hit' if c['hit'] else 'miss'})" for c in cards))
 
     events, hits = [], 0
     for c in cards:
@@ -129,8 +101,8 @@ def main():
     wav = out.with_suffix(".wav")
     write_wav(wav, mix(events, total))
 
-    finish = frame(story, cards, featured, big, morph)
-    opening = frame(0, cards, featured, big, morph)
+    finish = frame(story, cards)
+    opening = frame(0, cards)
     encoder = subprocess.Popen(
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
          "-r", str(fps), "-i", "-", "-i", str(wav), "-c:v", "libx264", "-preset", "slow", "-crf", "18",
@@ -144,7 +116,7 @@ def main():
         elif t < lead:
             image = Image.blend(finish, opening, ease((t - LEAD_HOLD) / LEAD_FADE))
         else:
-            image = frame(t - lead, cards, featured, big, morph)
+            image = frame(t - lead, cards)
         encoder.stdin.write(image.tobytes())
         if k % fps == 0:
             print(f"{t:5.1f} / {total:.1f} s", flush=True)
