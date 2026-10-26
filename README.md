@@ -63,3 +63,37 @@ Some honest limits:
 - **Whisper is a generous listener.** It is trained to find words in noisy speech. A person might hear some hits as a robot clearing its throat.
 
 **Checking the synthesizer first.** Before asking any model, a hello written by hand from textbook formant values ([`frames/reference.json`](frames/reference.json)) had to come out as hello. The first version drove the formants with a smooth pulse and Whisper heard "Who", then "Pooh". [`scripts/vowel_check.py`](scripts/vowel_check.py) showed why: on a held "eh", the second formant came out 30 dB under the first, so every vowel sounded like "oo". Switching to an impulse train brought it to 14.5 dB under, about where real speech sits, and the hand-written hello was heard as hello. Every model was run on that fixed version.
+
+## The video
+
+The best model by the rule above plays first on a big card, its voice drawn as bars that light up while it sounds. Its card then shrinks into a grid of all ten, and the rest play one at a time, smallest model to largest, each ending in a tick or a cross. Every model plays the try Whisper was surest about. Llama 3.1 8B's clip runs four seconds, so the video plays its first 1.6 seconds and fades out. The sound is each model's own clip, plus a soft plink on a hit and a low knock on a miss.
+
+<p align="center"><img src="media/grid.jpg" width="560" alt="The finished grid: four crosses on the smaller models, six ticks on the frontier models"></p>
+
+## Run it
+
+```bash
+pip install -r requirements.txt
+python tests/test_synth.py                         # synthesizer checks
+python scripts/say.py frames/reference.json hi.wav # the hand-written hello
+AI_GATEWAY_API_KEY=... python scripts/run.py hello 3   # ask all ten models, three tries each
+python scripts/rerender.py hello                   # or rebuild the audio from the saved replies
+python scripts/judge.py hello                      # Whisper listens to every clip
+python scripts/scoreboard.py hello                 # hits, confidence, each model's clip
+python video/publish.py                            # the video, GIF and still; needs ffmpeg
+```
+
+Any word works in place of hello. The 36 gateway calls behind these results (30 tries plus six retries after token limit errors) cost 66 cents in total. Whisper runs on a laptop CPU in about a minute for all 30 clips.
+
+| Folder | What's in it |
+|---|---|
+| [`sayhello/`](sayhello/) | the synthesizer, the prompt and the gateway call, the Whisper judge |
+| [`scripts/`](scripts/) | asking the models, rebuilding audio, judging, the scoreboard, the vowel check |
+| [`frames/`](frames/) | the hand-written reference hello |
+| [`results/`](results/) | every raw reply, its frames, its audio, what Whisper heard, the scoreboard |
+| [`video/`](video/) | the cards, the sound, the renderer, the model logos |
+| [`tests/`](tests/) | lengths, the four second cap, wild values, wav round trips |
+
+## Credits
+
+Inspired by Gabriele Berton asking text-only models to draw, and the land or water maps of the Earth drawn by asking models one coordinate at a time. Transcription by OpenAI's [Whisper](https://github.com/openai/whisper) through [faster-whisper](https://github.com/SYSTRAN/faster-whisper). The cascade formant design follows [Klatt 1980](https://doi.org/10.1121/1.383940). Model logos from [LobeHub Icons](https://github.com/lobehub/lobe-icons). Models reached through the [Vercel AI Gateway](https://vercel.com/ai-gateway).
