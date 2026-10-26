@@ -1,0 +1,85 @@
+{
+ "featured": "google/gemini-3.5-flash",
+ "models": [
+  {
+   "model": "meta/llama-3.1-8b",
+   "hits": 0,
+   "tries": 3,
+   "confidence": 0.405,
+   "clip": "llama-3.1-8b_2",
+   "heard": "Oh"
+  },
+  {
+   "model": "openai/gpt-oss-20b",
+   "hits": 0,
+   "tries": 3,
+   "confidence": 0.466,
+   "clip": "gpt-oss-20b_1",
+   "heard": "Well y'all"
+  },
+  {
+   "model": "alibaba/qwen-3-32b",
+   "hits": 0,
+   "tries": 3,
+   "confidence": 0.396,
+   "clip": "qwen-3-32b_1",
+   "heard": "Go ahead."
+  },
+  {
+   "model": "meta/llama-3.3-70b",
+   "hits": 0,
+   "tries": 3,
+   "confidence": 0.364,
+   "clip": "llama-3.3-70b_1",
+   "heard": "BLEH BLEH"
+  },
+  {
+   "model": "deepseek/deepseek-v4-pro",
+   "hits": 3,
+   "tries": 3,
+   "confidence": 0.451,
+   "clip": "deepseek-v4-pro_1",
+   "heard": "Hello"
+  },
+  {
+   "model": "moonshotai/kimi-k3",
+   "hits": 3,
+   "tries": 3,
+   "confidence": 0.399,
+   "clip": "kimi-k3_2",
+   "heard": "Hello!"
+  },
+  {
+   "model": "google/gemini-3.5-flash",
+   "hits": 3,
+   "tries": 3,
+   "confidence": 0.513,
+   "clip": "gemini-3.5-flash_1",
+   "heard": "Hello"
+  },
+  {
+   "model": "openai/gpt-5.5",
+   "hits": 3,
+   "tries": 3,
+   "confidence": 0.451,
+   "clip": "gpt-5.5_0",
+   "heard": "Hello"
+  },
+  {
+   "model": "anthropic/claude-haiku-5.5",
+   "hits": 3,
+   "tries": 3,
+   "confidence": 0.429,
+   "clip": "claude-haiku-5.5_1",
+   "heard": "Hello"
+  },
+  {
+   "model": "anthropic/claude-opus-5.5",
+   "hits": 3,
+   "tries": 3,
+   "confidence": 0.489,
+   "clip": "claude-opus-5.5_2",
+   "heard": "Hello"
+  }
+ ]
+}
