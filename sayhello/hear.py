@@ -16,9 +16,17 @@ def model():
     return WhisperModel("small.en", device="cpu", compute_type="int8")
 
 
+PAD = 0.4  # seconds of silence on each side; Whisper guesses wildly on a clip with no lead-in
+
+
+def pad(audio):
+    silence = np.zeros(int(PAD * synth.SR), np.float32)
+    return np.concatenate([silence, np.asarray(audio, np.float32), silence])
+
+
 def hear(audio):
     """Text Whisper heard, and its confidence: the mean token probability."""
-    segments, _ = model().transcribe(np.asarray(audio, np.float32), beam_size=5, language="en",
+    segments, _ = model().transcribe(pad(audio), beam_size=5, language="en",
                                      condition_on_previous_text=False)
     segments = list(segments)
     text = " ".join(s.text.strip() for s in segments).strip()
