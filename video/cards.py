@@ -57,8 +57,11 @@ def draw_card(canvas, box, model, levels, played=0.0, verdict=None, mark=0.0, fa
     """box: (x, y, w, h) in canvas pixels. played: how much of the voice has sounded, 0 to 1.
     verdict: True heard as the word, False not, None not judged yet. mark: how far the mark has
     popped in, 0 to 1. fade: 0 draws nothing, 1 the full card."""
-    x, y, w, h = box
-    layer = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    ox, oy, w, h = box
+    # draw on a layer just big enough for the card, then place it; a full-canvas layer per card is slow
+    pad = int(h * 0.02) + 2
+    layer = Image.new("RGBA", (int(w) + 2 * pad, int(h) + 2 * pad), (0, 0, 0, 0))
+    x = y = pad
     d = ImageDraw.Draw(layer)
     d.rounded_rectangle((x, y, x + w, y + h), radius=h * 0.06, fill=CARD)
 
@@ -99,4 +102,4 @@ def draw_card(canvas, box, model, levels, played=0.0, verdict=None, mark=0.0, fa
     if fade < 1:
         alpha = layer.getchannel("A").point(lambda a: int(a * fade))
         layer.putalpha(alpha)
-    canvas.alpha_composite(layer)
+    canvas.alpha_composite(layer, (int(ox) - pad, int(oy) - pad))
