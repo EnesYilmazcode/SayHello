@@ -1,4 +1,4 @@
-"""One model's card: its logo, its name, its voice as a row of bars, and a mark for the verdict.
+"""One model's card: its logo, its name, its voice as a row of bars, what Whisper heard, and a stamp.
 
 Every size is a fraction of the card's height, so the same drawing works for the big opening card
 and the small grid cards, and for every size in between while one shrinks into the other.
@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
 FONT = "C:/Windows/Fonts/segoeuib.ttf"
-BG, CARD, DARK, LIGHT = "#faf8ef", "#eee4da", "#776e65", "#d6cdc4"
+BG, CARD, ACTIVE, DARK, LIGHT = "#faf8ef", "#eee4da", "#e3d6c8", "#776e65", "#d6cdc4"
 HIT, MISS = (25, 108, 240), (229, 81, 140)
 BARS = 28
 
@@ -53,17 +53,39 @@ def mix(a, b, t):
     return tuple(int(round(x + (y - x) * t)) for x, y in zip(a, b))
 
 
-def draw_card(canvas, box, model, levels, played=0.0, verdict=None, mark=0.0, fade=1.0):
+@lru_cache(maxsize=None)
+def stamp(verdict, size, angle=-12):
+    """A stamp: a cream disc with a ring and a tick or a cross, tilted, on its own layer."""
+    k = 4  # drawn large, then shrunk, for clean edges
+    n = size * k
+    image = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(image)
+    colour = HIT if verdict else MISS
+    ring = n * 0.07
+    d.ellipse((ring / 2, ring / 2, n - ring / 2, n - ring / 2), fill=BG, outline=colour, width=int(ring))
+    d.ellipse((ring * 1.9, ring * 1.9, n - ring * 1.9, n - ring * 1.9), outline=colour, width=max(1, int(ring * 0.35)))
+    c, r, width = n / 2, n * 0.3, int(n * 0.1)
+    if verdict:
+        d.line([(c - r * 0.75, c + r * 0.02), (c - r * 0.2, c + r * 0.55), (c + r * 0.8, c - r * 0.55)],
+               fill=colour, width=width, joint="curve")
+    else:
+        for sx in (-1, 1):
+            d.line([(c - r * 0.6 * sx, c - r * 0.6), (c + r * 0.6 * sx, c + r * 0.6)], fill=colour, width=width)
+    return image.rotate(angle, resample=Image.BICUBIC).resize((size, size), Image.LANCZOS)
+
+
+def draw_card(canvas, box, model, levels, played=0.0, verdict=None, mark=0.0, heard="", active=0.0):
     """box: (x, y, w, h) in canvas pixels. played: how much of the voice has sounded, 0 to 1.
-    verdict: True heard as the word, False not, None not judged yet. mark: how far the mark has
-    popped in, 0 to 1. fade: 0 draws nothing, 1 the full card."""
+    verdict: True heard as the word, False not, None not judged yet. mark: how far the stamp has
+    come down, 0 to 1. heard: what Whisper wrote down, typed out as the clip plays. active: 1 while
+    this card is the one speaking, which warms its background a little."""
     ox, oy, w, h = box
     # draw on a layer just big enough for the card, then place it; a full-canvas layer per card is slow
     pad = int(h * 0.02) + 2
     layer = Image.new("RGBA", (int(w) + 2 * pad, int(h) + 2 * pad), (0, 0, 0, 0))
     x = y = pad
     d = ImageDraw.Draw(layer)
-    d.rounded_rectangle((x, y, x + w, y + h), radius=h * 0.06, fill=CARD)
+    d.rounded_rectangle((x, y, x + w, y + h), radius=h * 0.06, fill=mix(CARD, ACTIVE, active))
 
     name, key = NAMES[model]
     size = int(h * 0.2)
@@ -78,28 +100,31 @@ def draw_card(canvas, box, model, levels, played=0.0, verdict=None, mark=0.0, fa
     mid, half = (top + bottom) / 2, (bottom - top) / 2
     step = w * 0.84 / len(levels)
     left = x + w * 0.08
-    lit = DARK if verdict is None else mix(DARK, HIT if verdict else MISS, mark)
+    tint = HIT if verdict else MISS
+    lit = DARK if verdict is None else mix(DARK, mix(tint, CARD, 0.5), mark)  # soft, so the stamp stands out
     for i, level in enumerate(levels):
         bx = left + i * step + step * 0.2
         bh = max(h * 0.008, level * half)
         colour = lit if (i + 0.5) / len(levels) <= played else LIGHT
         d.rounded_rectangle((bx, mid - bh, bx + step * 0.6, mid + bh), radius=step * 0.3, fill=colour)
 
-    # the mark: a filled circle with a tick or a cross, springing in
-    if verdict is not None and mark > 0:
-        pop = 1 + 0.25 * np.sin(np.pi * min(1, mark)) * (mark < 1)
-        r = h * 0.075 * min(1, mark * 1.6) * pop
-        cx, cy = x + w / 2, y + h * 0.86
-        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=HIT if verdict else MISS)
-        width = max(2, int(r * 0.22))
-        if verdict:
-            d.line([(cx - r * 0.45, cy + r * 0.02), (cx - r * 0.12, cy + r * 0.35), (cx + r * 0.48, cy - r * 0.32)],
-                   fill="white", width=width, joint="curve")
-        else:
-            for sx in (-1, 1):
-                d.line([(cx - r * 0.38 * sx, cy - r * 0.38), (cx + r * 0.38 * sx, cy + r * 0.38)], fill="white", width=width)
+    # what Whisper heard, typed out while the clip plays
+    shown = heard[:int(round(len(heard) * played))]
+    if shown:
+        f = font(h * 0.075)
+        while f.getlength(f'"{heard}"') > w * 0.9 and f.size > 8:
+            f = font(f.size - 1)
+        text = f'"{shown}"' if len(shown) == len(heard) else f'"{shown}'
+        d.text((x + w / 2, y + h * 0.85), text, font=f, fill=mix(DARK, tint, mark) if verdict is not None else DARK,
+               anchor="mm")
 
-    if fade < 1:
-        alpha = layer.getchannel("A").point(lambda a: int(a * fade))
-        layer.putalpha(alpha)
+    # the stamp lands on the bars once the clip is over: big and faint, then down and solid
+    if verdict is not None and mark > 0:
+        drop = 1 - (1 - min(1, mark / 0.45)) ** 3
+        scale = 1.75 - 0.75 * drop + 0.05 * np.sin(np.pi * np.clip((mark - 0.45) / 0.55, 0, 1))
+        side = max(4, int(h * 0.3 * scale))
+        image = stamp(verdict, int(h * 0.3)) if side == int(h * 0.3) else stamp(verdict, int(h * 0.3 * 1.75)).resize((side, side), Image.LANCZOS)
+        image.putalpha(image.getchannel("A").point(lambda a: int(a * min(1, drop * 1.3))))
+        layer.alpha_composite(image, (int(x + w / 2 - side / 2), int(mid - side / 2)))
+
     canvas.alpha_composite(layer, (int(ox) - pad, int(oy) - pad))
