@@ -27,6 +27,10 @@ MODELS = [
     "anthropic/claude-opus-5.5",
 ]
 
+# Llama 3.3 70B rejects a 12,000 token limit, and DeepSeek V4 Pro spent all 12,000 thinking and
+# answered with nothing, so each gets its own.
+MAX_TOKENS = {"meta/llama-3.3-70b": 4000, "deepseek/deepseek-v4-pro": 32000}
+
 
 def name(model, i):
     return f"{model.split('/')[1]}_{i}"
@@ -42,7 +46,7 @@ def render(reply, out, stem):
 def job(model, i, word, out):
     stem = name(model, i)
     try:
-        reply = ask(model, word)
+        reply = ask(model, word, MAX_TOKENS.get(model, 12000))
         (out / f"{stem}.txt").write_text(reply, encoding="utf8")
         return stem, "ok", render(reply, out, stem)
     except Exception as e:
