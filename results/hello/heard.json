@@ -1,0 +1,212 @@
+[
+ {
+  "model": "meta/llama-3.1-8b",
+  "try": 0,
+  "heard": "Mmmmm",
+  "confidence": 0.372,
+  "hit": false
+ },
+ {
+  "model": "meta/llama-3.1-8b",
+  "try": 1,
+  "heard": "uuuuuuuuuu",
+  "confidence": 0.308,
+  "hit": false
+ },
+ {
+  "model": "meta/llama-3.1-8b",
+  "try": 2,
+  "heard": "Oh",
+  "confidence": 0.535,
+  "hit": false
+ },
+ {
+  "model": "openai/gpt-oss-20b",
+  "try": 0,
+  "heard": "BAM",
+  "confidence": 0.437,
+  "hit": false
+ },
+ {
+  "model": "openai/gpt-oss-20b",
+  "try": 1,
+  "heard": "Well y'all",
+  "confidence": 0.593,
+  "hit": false
+ },
+ {
+  "model": "openai/gpt-oss-20b",
+  "try": 2,
+  "heard": "Got it",
+  "confidence": 0.368,
+  "hit": false
+ },
+ {
+  "model": "alibaba/qwen-3-32b",
+  "try": 0,
+  "heard": "Fuck! Fuck!",
+  "confidence": 0.369,
+  "hit": false
+ },
+ {
+  "model": "alibaba/qwen-3-32b",
+  "try": 1,
+  "heard": "Go ahead.",
+  "confidence": 0.471,
+  "hit": false
+ },
+ {
+  "model": "alibaba/qwen-3-32b",
+  "try": 2,
+  "heard": "BLEH-EH-EH",
+  "confidence": 0.347,
+  "hit": false
+ },
+ {
+  "model": "meta/llama-3.3-70b",
+  "try": 0,
+  "heard": "Bleh.",
+  "confidence": 0.311,
+  "hit": false
+ },
+ {
+  "model": "meta/llama-3.3-70b",
+  "try": 1,
+  "heard": "BLEH BLEH",
+  "confidence": 0.427,
+  "hit": false
+ },
+ {
+  "model": "meta/llama-3.3-70b",
+  "try": 2,
+  "heard": "Wha- Wha-",
+  "confidence": 0.353,
+  "hit": false
+ },
+ {
+  "model": "deepseek/deepseek-v4-pro",
+  "try": 0,
+  "heard": "Hello",
+  "confidence": 0.471,
+  "hit": true
+ },
+ {
+  "model": "deepseek/deepseek-v4-pro",
+  "try": 1,
+  "heard": "Hello",
+  "confidence": 0.516,
+  "hit": true
+ },
+ {
+  "model": "deepseek/deepseek-v4-pro",
+  "try": 2,
+  "heard": "Hello?",
+  "confidence": 0.365,
+  "hit": true
+ },
+ {
+  "model": "moonshotai/kimi-k3",
+  "try": 0,
+  "heard": "Hello!",
+  "confidence": 0.398,
+  "hit": true
+ },
+ {
+  "model": "moonshotai/kimi-k3",
+  "try": 1,
+  "heard": "Hello!",
+  "confidence": 0.398,
+  "hit": true
+ },
+ {
+  "model": "moonshotai/kimi-k3",
+  "try": 2,
+  "heard": "Hello!",
+  "confidence": 0.4,
+  "hit": true
+ },
+ {
+  "model": "google/gemini-3.5-flash",
+  "try": 0,
+  "heard": "Hello",
+  "confidence": 0.519,
+  "hit": true
+ },
+ {
+  "model": "google/gemini-3.5-flash",
+  "try": 1,
+  "heard": "Hello",
+  "confidence": 0.538,
+  "hit": true
+ },
+ {
+  "model": "google/gemini-3.5-flash",
+  "try": 2,
+  "heard": "Hello",
+  "confidence": 0.482,
+  "hit": true
+ },
+ {
+  "model": "openai/gpt-5.5",
+  "try": 0,
+  "heard": "Hello",
+  "confidence": 0.523,
+  "hit": true
+ },
+ {
+  "model": "openai/gpt-5.5",
+  "try": 1,
+  "heard": "Hello",
+  "confidence": 0.456,
+  "hit": true
+ },
+ {
+  "model": "openai/gpt-5.5",
+  "try": 2,
+  "heard": "Hello!",
+  "confidence": 0.375,
+  "hit": true
+ },
+ {
+  "model": "anthropic/claude-haiku-5.5",
+  "try": 0,
+  "heard": "Hello",
+  "confidence": 0.4,
+  "hit": true
+ },
+ {
+  "model": "anthropic/claude-haiku-5.5",
+  "try": 1,
+  "heard": "Hello",
+  "confidence": 0.508,
+  "hit": true
+ },
+ {
+  "model": "anthropic/claude-haiku-5.5",
+  "try": 2,
+  "heard": "Hello!",
+  "confidence": 0.378,
+  "hit": true
+ },
+ {
+  "model": "anthropic/claude-opus-5.5",
+  "try": 0,
+  "heard": "Hello",
+  "confidence": 0.478,
+  "hit": true
+ },
+ {
+  "model": "anthropic/claude-opus-5.5",
+  "try": 1,
+  "heard": "Hello",
+  "confidence": 0.485,
+  "hit": true
+ },
+ {
+  "model": "anthropic/claude-opus-5.5",
+  "try": 2,
+  "heard": "Hello",
+  "confidence": 0.503,
+  "hit": true
+ }
+]
