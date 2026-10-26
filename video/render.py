@@ -25,9 +25,9 @@ W, H, S = 1800, 1200, 2
 COLS, CARD_W, CARD_H, GAP = 5, 312, 505, 30
 BIG_H = 1000
 MAX_PLAY = 1.6                    # seconds of a clip that play; longer ones fade out
-LEAD_HOLD, LEAD_FADE, END_HOLD = 0.85, 0.45, 2.0
+LEAD_HOLD, LEAD_FADE, END_HOLD = 0.85, 0.45, 1.5
 HIGHLIGHT, LIFT = 0.18, 1.08      # seconds to lift a card as its turn starts, and how much
-GAPS = (0.35, 0.15)               # pause after each verdict, first to last
+GAPS = (0.3, 0.1)                 # pause after each verdict, first to last
 
 
 def ease(t):
@@ -68,9 +68,9 @@ def timeline(cards, featured):
     big_w = BIG_H * CARD_W / CARD_H
     big = ((W - big_w) / 2, (H - BIG_H) / 2, big_w, BIG_H)
     f = cards[featured]
-    f["start"] = 0.5
+    f["start"] = 0.35
     f["mark"] = f["start"] + f["play"] + 0.12
-    morph = (f["mark"] + 0.9, f["mark"] + 1.65)
+    morph = (f["mark"] + 0.7, f["mark"] + 1.3)
     t = morph[1] + 0.3
     others = [i for i in range(len(cards)) if i != featured]
     for k, i in enumerate(others):
