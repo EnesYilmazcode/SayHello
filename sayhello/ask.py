@@ -36,3 +36,14 @@ def ask(model, word, max_tokens=12000):
     )
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"] or ""
+
+
+def parse(reply):
+    """The first JSON array in the reply, which must be a list of frame objects."""
+    match = re.search(r"\[.*\]", reply, re.S)
+    if not match:
+        raise ValueError("no JSON array in the reply")
+    frames = json.loads(match.group(0))
+    if not (isinstance(frames, list) and frames and all(isinstance(f, dict) for f in frames)):
+        raise ValueError("the array is not a list of frames")
+    return frames
