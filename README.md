@@ -4,7 +4,7 @@
 No audio and no tools. Each one writes the numbers that shape the sound, and Whisper says what it heard.</p>
 
 <p align="center">
-  <img src="media/say-hello.gif" width="560" alt="Ten model cards, each with its voice as a row of bars and a tick or a cross">
+  <img src="media/say-hello-grid.gif" width="560" alt="Ten model cards, each with its voice as a row of bars, what Whisper heard, and a stamp">
 </p>
 
 ## How it works
@@ -66,9 +66,9 @@ Some honest limits:
 
 ## The video
 
-The best model by the rule above plays first on a big card, its voice drawn as bars that light up while it sounds. Its card then shrinks into a grid of all ten, and the rest play one at a time, smallest model to largest, each ending in a tick or a cross. Every model plays the try Whisper was surest about. Llama 3.1 8B's clip runs four seconds, so the video plays its first 1.6 seconds and fades out. The sound is each model's own clip, plus a soft plink on a hit and a low knock on a miss.
+All ten cards sit in one grid. The best model by the rule above plays first, then the other nine in a fixed shuffled order so hits and misses are mixed. While a clip plays, its bars light up and its card types out what Whisper heard. When it ends, a stamp with a tick or a cross comes down on the bars. Every model plays the try Whisper was surest about. Llama 3.1 8B's clip runs four seconds, so the video plays its first 1.6 seconds and fades out. The sound is each model's own clip, plus a soft plink on a hit and a low knock on a miss.
 
-<p align="center"><img src="media/grid.jpg" width="560" alt="The finished grid: four crosses on the smaller models, six ticks on the frontier models"></p>
+<p align="center"><img src="media/finish.jpg" width="560" alt="The finished grid: crosses on the four smaller models, ticks on the six frontier models"></p>
 
 ## Run it
 
